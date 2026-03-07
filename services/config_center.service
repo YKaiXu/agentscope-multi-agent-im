@@ -1,0 +1,18 @@
+[Unit]
+Description=Config Center Service for Multi-Agent IM
+After=network.target
+
+[Service]
+Type=simple
+User=yupeng
+Group=yupeng
+WorkingDirectory=/home/yupeng/.df/multi_agent_im
+Environment="PATH=/home/yupeng/.df/agentscope_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/home/yupeng/.df/agentscope_env/bin/python /home/yupeng/.df/multi_agent_im/config_center.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/yupeng/.df/multi_agent_im/logs/config_center.log
+StandardError=append:/home/yupeng/.df/multi_agent_im/logs/config_center.log
+
+[Install]
+WantedBy=multi-user.target
