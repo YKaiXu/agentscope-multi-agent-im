@@ -1,0 +1,109 @@
+{
+  "agents": [
+    {
+      "name": "研究员",
+      "role": "收集和整理信息",
+      "sys_prompt": "你是一个专业的研究员，负责收集和整理信息。请确保信息的准确性和完整性。",
+      "model": "",
+      "memory_type": "InMemoryMemory",
+      "long_term_memory_enabled": false,
+      "long_term_memory_mode": "both",
+      "toolkit_enabled": false,
+      "enable_meta_tool": false,
+      "parallel_tool_calls": false,
+      "knowledge_enabled": false,
+      "enable_rewrite_query": false,
+      "plan_notebook_enabled": false,
+      "max_iters": 10,
+      "print_hint_msg": true,
+      "formatter": "OpenAIChatFormatter",
+      "im_platform": "feishu",
+      "im_app_id": "cli_a91289fc0478dcd2",
+      "im_app_secret": "DjGabCmvhcFDwiqPU4mbqbJCFBE4Yxge",
+      "enabled": true
+    },
+    {
+      "name": "分析师",
+      "role": "分析数据并给出见解",
+      "sys_prompt": "你是一个专业的分析师，负责分析数据并给出见解。请提供深入的分析和有价值的建议。",
+      "model": "",
+      "memory_type": "InMemoryMemory",
+      "long_term_memory_enabled": false,
+      "long_term_memory_mode": "both",
+      "toolkit_enabled": false,
+      "enable_meta_tool": false,
+      "parallel_tool_calls": false,
+      "knowledge_enabled": false,
+      "enable_rewrite_query": false,
+      "plan_notebook_enabled": false,
+      "max_iters": 10,
+      "print_hint_msg": true,
+      "formatter": "OpenAIChatFormatter",
+      "im_platform": "global",
+      "im_app_id": "",
+      "im_app_secret": "",
+      "enabled": true
+    },
+    {
+      "name": "撰写员",
+      "role": "生成完整报告",
+      "sys_prompt": "你是一个专业的撰写员，负责生成完整报告。请确保报告结构清晰、内容完整。",
+      "model": "",
+      "memory_type": "InMemoryMemory",
+      "long_term_memory_enabled": false,
+      "long_term_memory_mode": "both",
+      "toolkit_enabled": false,
+      "enable_meta_tool": false,
+      "parallel_tool_calls": false,
+      "knowledge_enabled": false,
+      "enable_rewrite_query": false,
+      "plan_notebook_enabled": false,
+      "max_iters": 10,
+      "print_hint_msg": true,
+      "formatter": "OpenAIChatFormatter",
+      "im_platform": "global",
+      "im_app_id": "",
+      "im_app_secret": "",
+      "enabled": true
+    }
+  ],
+  "im": {
+    "global_im": {
+      "dingtalk": {
+        "app_id": "",
+        "app_secret": "",
+        "enabled": false
+      },
+      "discord": {
+        "app_id": "",
+        "app_secret": "",
+        "enabled": false
+      },
+      "feishu": {
+        "enabled": false
+      },
+      "qq": {
+        "app_id": "",
+        "app_secret": "",
+        "enabled": false
+      },
+      "web": {
+        "app_id": "",
+        "app_secret": "",
+        "enabled": false
+      }
+    },
+    "platform": "multi"
+  },
+  "llms": [
+    {
+      "id": "llm_1772888517",
+      "provider": "智普",
+      "model_id": "GLM-4.7-Flash",
+      "display_name": "GLM-4.7-Flash",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4/",
+      "api_key": "ec0ed7465c4146218af65d58d810b37f.xQDmGgInzSmCLNsB"
+    }
+  ],
+  "workflow": "parallel"
+}
