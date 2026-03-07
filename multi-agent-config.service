@@ -1,0 +1,16 @@
+[Unit]
+Description=Multi-Agent IM Configuration Center (Streamlit)
+After=network.target
+
+[Service]
+Type=simple
+User=yupeng
+WorkingDirectory=/home/yupeng/.df/multi_agent_im
+ExecStart=/home/yupeng/.df/agentscope_env/bin/streamlit run /home/yupeng/.df/multi_agent_im/streamlit_config.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/yupeng/.df/multi_agent_im/streamlit.log
+StandardError=append:/home/yupeng/.df/multi_agent_im/streamlit.log
+
+[Install]
+WantedBy=multi-user.target

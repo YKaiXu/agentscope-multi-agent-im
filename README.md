@@ -1,12 +1,12 @@
 # AgentScope Multi-Agent IM 配置中心
 
-基于 AgentScope 框架的多智能体 IM 配置中心，支持飞书等即时通讯平台。
+基于 AgentScope 框架的多智能体 IM 配置中心，支持飞书和Web聊天。
 
 ## 特性
 
 - 🖥️ **Streamlit Web配置界面** - 开箱即用的可视化配置
 - 🤖 **多Agent支持** - 支持创建多个不同角色的Agent
-- 💬 **IM集成** - 支持飞书等即时通讯平台
+- 💬 **IM集成** - 支持飞书和Web聊天
 - 🔄 **多种工作流** - Sequential、Fanout、MsgHub协作模式
 - 🧠 **长期记忆** - 支持Agent长期记忆功能
 - 📚 **知识库** - RAG知识检索集成
@@ -17,8 +17,8 @@
 
 ```bash
 # 克隆项目
-git clone <repository>
-cd multi_agent_im
+git clone https://github.com/YKaiXu/agentscope-multi-agent-im.git
+cd agentscope-multi-agent-im
 
 # 创建虚拟环境
 python3 -m venv venv
@@ -36,12 +36,20 @@ streamlit run streamlit_config.py
 
 访问 http://localhost:8501 进行配置。
 
-### 3. 配置步骤
+### 3. 启动Web聊天
 
-1. **LLM配置** - 添加LLM模型（如智普AI、OpenAI等）
-2. **Agent配置** - 创建Agent，选择模型、角色、能力
-3. **IM配置** - 配置飞书等IM平台
-4. **工作流配置** - 选择工作流模式
+```bash
+streamlit run web_channel_service.py
+```
+
+访问 http://localhost:8502 进行Web聊天。
+
+## 支持的IM平台
+
+| 平台 | 状态 | 说明 |
+|------|------|------|
+| **飞书** | ✅ 已支持 | 完整支持，包括消息路由和MsgHub协作 |
+| **Web** | ✅ 已支持 | 基于Streamlit的Web聊天界面 |
 
 ## 工作流模式
 
@@ -55,14 +63,15 @@ streamlit run streamlit_config.py
 ## 项目结构
 
 ```
-multi_agent_im/
-├── streamlit_config.py      # Streamlit配置界面
+agentscope-multi-agent-im/
+├── streamlit_config.py       # Streamlit配置界面
 ├── feishu_channel_service.py # 飞书消息服务
-├── path_config.py           # 路径配置（可移植性）
-├── config.json              # 配置文件
-├── requirements.txt         # 依赖列表
-├── install.sh              # 安装脚本
-└── README.md               # 说明文档
+├── web_channel_service.py    # Web聊天服务
+├── path_config.py            # 路径配置（可移植性）
+├── config.json               # 配置文件
+├── requirements.txt          # 依赖列表
+├── install.sh                # 安装脚本
+└── README.md                 # 说明文档
 ```
 
 ## 环境变量

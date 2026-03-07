@@ -172,8 +172,8 @@ with tab1:
             key=f"agent_model{key_suffix}"
         )
     with col2:
-        im_platform = st.selectbox("IM平台", ["global", "feishu", "dingtalk", "qq", "discord"], 
-                                   index=["global", "feishu", "dingtalk", "qq", "discord"].index(agent.get("im_platform", "global")), key=f"agent_im{key_suffix}")
+        im_platform = st.selectbox("IM平台", ["global", "feishu", "web"], 
+                                   index=["global", "feishu", "web"].index(agent.get("im_platform", "global")), key=f"agent_im{key_suffix}")
         enabled = st.checkbox("启用", value=agent.get("enabled", True), key=f"agent_enabled{key_suffix}")
     
     st.markdown("**角色模板** (选择后自动填充系统提示词)")
@@ -428,7 +428,7 @@ with tab3:
     
     st.subheader("IM平台全局配置")
     
-    platforms = ["feishu", "dingtalk", "qq", "discord", "web"]
+    platforms = ["feishu", "web"]
     
     for platform in platforms:
         with st.expander(f"📱 {platform.upper()}"):
@@ -474,6 +474,24 @@ with tab3:
                 else:
                     msghub_announcement = ""
             
+            if platform == "web":
+                st.divider()
+                st.markdown("**Web聊天配置**")
+                web_port = st.number_input(
+                    "端口",
+                    min_value=8000,
+                    max_value=9999,
+                    value=platform_config.get("port", 8502),
+                    key=f"im_{platform}_port"
+                )
+                web_mode = st.selectbox(
+                    "聊天模式",
+                    ["single", "msghub"],
+                    index=["single", "msghub"].index(platform_config.get("mode", "single")),
+                    format_func=lambda x: {"single": "单Agent对话", "msghub": "多Agent协作"}.get(x, x),
+                    key=f"im_{platform}_mode"
+                )
+            
             if st.button(f"💾 保存 {platform}", key=f"save_im_{platform}"):
                 if "im" not in config:
                     config["im"] = {"global_im": {}}
@@ -495,6 +513,10 @@ with tab3:
                         platform_data["route_keywords"] = kw_map
                     if route_mode == "msghub":
                         platform_data["msghub_announcement"] = msghub_announcement
+                
+                if platform == "web":
+                    platform_data["port"] = web_port
+                    platform_data["mode"] = web_mode
                 
                 config["im"]["global_im"][platform] = platform_data
                 save_config(config)
