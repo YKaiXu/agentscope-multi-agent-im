@@ -45,6 +45,7 @@ class AgentConfig:
     long_term_memory_enabled: bool = False
     long_term_memory_mode: str = "both"
     ltm_agent_name: str = ""
+    embedding_model: str = ""
     toolkit_enabled: bool = False
     enable_meta_tool: bool = False
     parallel_tool_calls: bool = False
@@ -80,6 +81,7 @@ def get_agent_configs(config: Dict[str, Any]) -> List[AgentConfig]:
                 long_term_memory_enabled=agent_data.get("long_term_memory_enabled", False),
                 long_term_memory_mode=agent_data.get("long_term_memory_mode", "both"),
                 ltm_agent_name=agent_data.get("ltm_agent_name", ""),
+                embedding_model=agent_data.get("embedding_model", ""),
                 toolkit_enabled=agent_data.get("toolkit_enabled", False),
                 enable_meta_tool=agent_data.get("enable_meta_tool", False),
                 parallel_tool_calls=agent_data.get("parallel_tool_calls", False),
@@ -101,6 +103,56 @@ def get_api_config(llm_id: str, config: Dict[str, Any]) -> Dict[str, str]:
                 "model_id": llm.get("model_id", ""),
             }
     return {}
+
+def get_embedding_config(emb_id: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    embeddings = config.get("embeddings", [])
+    for emb in embeddings:
+        if emb.get("id") == emb_id:
+            return {
+                "provider": emb.get("provider", "OpenAI"),
+                "model_name": emb.get("model_name", ""),
+                "dimensions": emb.get("dimensions", 1024),
+                "api_key": emb.get("api_key", ""),
+                "base_url": emb.get("base_url", ""),
+            }
+    return {}
+
+def create_embedding_model(emb_config: Dict[str, Any]) -> Any:
+    try:
+        provider = emb_config.get("provider", "OpenAI")
+        
+        if provider == "OpenAI":
+            from agentscope.embedding import OpenAITextEmbedding
+            return OpenAITextEmbedding(
+                model_name=emb_config.get("model_name", "text-embedding-3-small"),
+                api_key=emb_config.get("api_key", ""),
+                base_url=emb_config.get("base_url", "https://api.openai.com/v1"),
+            )
+        elif provider == "DashScope":
+            from agentscope.embedding import DashScopeTextEmbedding
+            return DashScopeTextEmbedding(
+                model_name=emb_config.get("model_name", "text-embedding-v3"),
+                api_key=emb_config.get("api_key", ""),
+                dimensions=emb_config.get("dimensions", 1024),
+            )
+        elif provider == "Gemini":
+            from agentscope.embedding import GeminiTextEmbedding
+            return GeminiTextEmbedding(
+                model_name=emb_config.get("model_name", "text-embedding-004"),
+                api_key=emb_config.get("api_key", ""),
+            )
+        elif provider == "Ollama":
+            from agentscope.embedding import OllamaTextEmbedding
+            return OllamaTextEmbedding(
+                model_name=emb_config.get("model_name", "nomic-embed-text"),
+                base_url=emb_config.get("base_url", "http://localhost:11434"),
+            )
+        else:
+            logger.error(f"不支持的Embedding提供商: {provider}")
+            return None
+    except Exception as e:
+        logger.error(f"创建Embedding模型失败: {e}")
+        return None
 
 async def create_agent(agent_config: AgentConfig, config: Dict[str, Any]) -> Any:
     try:
@@ -137,14 +189,41 @@ async def create_agent(agent_config: AgentConfig, config: Dict[str, Any]) -> Any
         }
 
         if agent_config.long_term_memory_enabled:
-            from agentscope.memory import LongTermMemory
-            ltm_name = agent_config.ltm_agent_name or agent_config.name
-            long_term_memory = LongTermMemory(
-                ltm_name,
-                mode=agent_config.long_term_memory_mode,
-            )
-            agent_kwargs["long_term_memory"] = long_term_memory
-            logger.info(f"Agent {agent_config.name} 启用长期记忆: {ltm_name}")
+            if agent_config.embedding_model:
+                try:
+                    from agentscope.memory import Mem0LongTermMemory
+                    from agentscope.vector_store import QdrantStore
+                    
+                    emb_config = get_embedding_config(agent_config.embedding_model, config)
+                    if emb_config:
+                        embedding_model = create_embedding_model(emb_config)
+                        if embedding_model:
+                            data_dir = Path(__file__).parent / "data" / "qdrant"
+                            data_dir.mkdir(parents=True, exist_ok=True)
+                            
+                            vector_store = QdrantStore(
+                                location=str(data_dir),
+                                collection_name=f"ltm_{agent_config.name}",
+                                dimensions=emb_config.get("dimensions", 1024),
+                            )
+                            
+                            long_term_memory = Mem0LongTermMemory(
+                                agent_name=agent_config.name,
+                                user_name="default_user",
+                                model=model,
+                                embedding_model=embedding_model,
+                                vector_store_config=vector_store,
+                            )
+                            agent_kwargs["long_term_memory"] = long_term_memory
+                            logger.info(f"Agent {agent_config.name} 启用长期记忆 (Mem0LongTermMemory + Qdrant)")
+                        else:
+                            logger.warning(f"Agent {agent_config.name} Embedding模型创建失败，跳过长期记忆")
+                    else:
+                        logger.warning(f"Agent {agent_config.name} 未找到Embedding配置，跳过长期记忆")
+                except Exception as e:
+                    logger.warning(f"Agent {agent_config.name} 长期记忆初始化失败: {e}，跳过")
+            else:
+                logger.warning(f"Agent {agent_config.name} 启用了长期记忆但未配置Embedding模型，跳过")
 
         if agent_config.toolkit_enabled:
             from agentscope.tools import default_toolset
