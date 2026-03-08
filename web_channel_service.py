@@ -209,7 +209,6 @@ async def create_agent(agent_config: AgentConfig, config: Dict[str, Any]) -> Any
             if agent_config.embedding_model:
                 try:
                     from agentscope.memory import Mem0LongTermMemory
-                    from agentscope.vector_store import QdrantStore
                     
                     emb_config = get_embedding_config(agent_config.embedding_model, config)
                     if emb_config:
@@ -218,18 +217,20 @@ async def create_agent(agent_config: AgentConfig, config: Dict[str, Any]) -> Any
                             data_dir = Path(__file__).parent / "data" / "qdrant"
                             data_dir.mkdir(parents=True, exist_ok=True)
                             
-                            vector_store = QdrantStore(
-                                location=str(data_dir),
-                                collection_name=f"ltm_{agent_config.name}",
-                                dimensions=emb_config.get("dimensions", 1024),
-                            )
+                            vector_store_config = {
+                                "provider": "qdrant",
+                                "config": {
+                                    "collection_name": f"ltm_{agent_config.name}",
+                                    "path": str(data_dir),
+                                }
+                            }
                             
                             long_term_memory = Mem0LongTermMemory(
                                 agent_name=agent_config.name,
                                 user_name="default_user",
                                 model=model,
                                 embedding_model=embedding_model,
-                                vector_store_config=vector_store,
+                                vector_store_config=vector_store_config,
                             )
                             agent_kwargs["long_term_memory"] = long_term_memory
                             logger.info(f"Agent {agent_config.name} 启用长期记忆 (Mem0LongTermMemory + Qdrant)")

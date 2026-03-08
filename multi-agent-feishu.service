@@ -1,0 +1,18 @@
+[Unit]
+Description=Multi-Agent IM Feishu Service
+After=network.target
+
+[Service]
+Type=simple
+User=yupeng
+WorkingDirectory=/home/yupeng/.df/multi_agent_im
+Environment="PATH=/home/yupeng/.df/agentscope_env/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="CONFIG_PATH=/home/yupeng/.df/multi_agent_im/config.json"
+ExecStart=/home/yupeng/.df/agentscope_env/bin/python /home/yupeng/.df/multi_agent_im/feishu_channel_service.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
