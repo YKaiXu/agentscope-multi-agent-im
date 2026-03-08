@@ -96,7 +96,7 @@ st.set_page_config(page_title="多Agent配置中心", page_icon="🤖", layout="
 
 st.title("🤖 多Agent IM 配置中心")
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🤖 Agent配置", "🧠 LLM配置", "💬 IM配置", "🔄 工作流", "⚙️ 服务管理"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🤖 Agent配置", "🧠 LLM配置", "🔢 Embedding配置", "💬 IM配置", "🔄 工作流", "⚙️ 服务管理"])
 
 with tab1:
     config = load_config()
@@ -253,10 +253,33 @@ with tab1:
             with col2:
                 ltm_agent_name = st.text_input("记忆Agent名称", value=agent.get("ltm_agent_name", name or "agent"), 
                                                help="用于区分不同Agent的记忆存储", key=f"agent_ltm_name{key_suffix}")
-            st.info("💡 长期记忆使用ReMePersonalLongTermMemory，需要配置embedding模型")
+            
+            config_for_emb = load_config()
+            embeddings = config_for_emb.get("embeddings", [])
+            if embeddings:
+                emb_options = [emb.get("id", "") for emb in embeddings]
+                emb_display = {emb.get("id", ""): emb.get("display_name", emb.get("id", "")) for emb in embeddings}
+                current_emb = agent.get("embedding_model", "")
+                if current_emb not in emb_options:
+                    current_emb = emb_options[0] if emb_options else ""
+                
+                embedding_model = st.selectbox(
+                    "Embedding模型",
+                    emb_options,
+                    index=emb_options.index(current_emb) if current_emb in emb_options else 0,
+                    format_func=lambda x: emb_display.get(x, x),
+                    key=f"agent_emb{key_suffix}"
+                )
+                st.success(f"✅ 已选择Embedding: {emb_display.get(embedding_model, embedding_model)}")
+            else:
+                st.warning("⚠️ 请先在「Embedding配置」页面添加Embedding模型")
+                embedding_model = ""
+            
+            st.info("💡 长期记忆使用Mem0LongTermMemory + Qdrant向量存储")
         else:
             ltm_mode = "both"
             ltm_agent_name = name or "agent"
+            embedding_model = ""
         
         st.divider()
         st.markdown("### 🔧 工具集配置")
@@ -306,6 +329,7 @@ with tab1:
                 "long_term_memory_enabled": ltm_enabled,
                 "long_term_memory_mode": ltm_mode,
                 "ltm_agent_name": ltm_agent_name if ltm_enabled else "",
+                "embedding_model": embedding_model if ltm_enabled else "",
                 "toolkit_enabled": toolkit_enabled,
                 "enable_meta_tool": meta_tool, "parallel_tool_calls": parallel_tool,
                 "knowledge_enabled": knowledge_enabled, 
@@ -426,6 +450,135 @@ with tab2:
 with tab3:
     config = load_config()
     
+    st.subheader("Embedding模型配置")
+    st.info("Embedding模型用于长期记忆和知识库的向量化")
+    
+    embeddings = config.get("embeddings", [])
+    
+    if embeddings:
+        st.markdown("### 已配置的Embedding模型")
+        for i, emb in enumerate(embeddings):
+            with st.expander(f"🔢 {emb.get('display_name', emb.get('id', f'Embedding {i+1}'))}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.text_input("ID", value=emb.get("id", ""), disabled=True, key=f"emb_id_display_{i}")
+                    st.text_input("提供商", value=emb.get("provider", ""), disabled=True, key=f"emb_provider_display_{i}")
+                    st.text_input("模型名称", value=emb.get("model_name", ""), disabled=True, key=f"emb_model_display_{i}")
+                with col2:
+                    st.text_input("向量维度", value=str(emb.get("dimensions", 1024)), disabled=True, key=f"emb_dim_display_{i}")
+                    st.text_input("API Key", value="***" + emb.get("api_key", "")[-4:] if emb.get("api_key") else "", disabled=True, key=f"emb_key_display_{i}")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("✏️ 编辑", key=f"emb_edit_{i}"):
+                        st.session_state.edit_emb_index = i
+                        st.rerun()
+                with col2:
+                    if st.button("🗑️ 删除", key=f"emb_delete_{i}"):
+                        embeddings.pop(i)
+                        config["embeddings"] = embeddings
+                        save_config(config)
+                        st.success("删除成功！")
+                        st.rerun()
+    
+    st.divider()
+    
+    edit_emb_idx = st.session_state.get("edit_emb_index")
+    
+    if edit_emb_idx is not None and edit_emb_idx < len(embeddings):
+        st.subheader(f"编辑 Embedding: {embeddings[edit_emb_idx].get('display_name', '')}")
+        emb = embeddings[edit_emb_idx]
+        emb_id_fixed = emb.get("id", "")
+    else:
+        st.subheader("添加新 Embedding模型")
+        emb = {}
+        emb_id_fixed = None
+        edit_emb_idx = None
+    
+    emb_key_suffix = f"_edit_{edit_emb_idx}" if edit_emb_idx is not None else "_add"
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if edit_emb_idx is not None:
+            st.text_input("ID (唯一标识符)", value=emb.get("id", ""), disabled=True, key=f"emb_id{emb_key_suffix}")
+            emb_id = emb.get("id", "")
+        else:
+            emb_id = st.text_input("ID (唯一标识符)", value=f"emb_{int(__import__('time').time())}", key=f"emb_id{emb_key_suffix}")
+        
+        provider = st.selectbox(
+            "提供商",
+            ["OpenAI", "DashScope", "Gemini", "Ollama"],
+            index=["OpenAI", "DashScope", "Gemini", "Ollama"].index(emb.get("provider", "DashScope")),
+            key=f"emb_provider{emb_key_suffix}"
+        )
+        
+        if provider == "OpenAI":
+            default_model = "text-embedding-3-small"
+            default_dim = 1536
+            default_url = "https://api.openai.com/v1"
+        elif provider == "DashScope":
+            default_model = "text-embedding-v3"
+            default_dim = 1024
+            default_url = ""
+        elif provider == "Gemini":
+            default_model = "text-embedding-004"
+            default_dim = 768
+            default_url = ""
+        else:
+            default_model = "nomic-embed-text"
+            default_dim = 768
+            default_url = "http://localhost:11434"
+        
+        model_name = st.text_input("模型名称", value=emb.get("model_name", default_model), key=f"emb_model{emb_key_suffix}")
+    
+    with col2:
+        display_name = st.text_input("显示名称", value=emb.get("display_name", f"{provider} Embedding"), key=f"emb_display{emb_key_suffix}")
+        dimensions = st.number_input("向量维度", min_value=128, max_value=4096, value=emb.get("dimensions", default_dim), key=f"emb_dim{emb_key_suffix}")
+        api_key = st.text_input("API Key", type="password", value=emb.get("api_key", ""), key=f"emb_key{emb_key_suffix}")
+        
+        if provider in ["OpenAI", "Ollama"]:
+            base_url = st.text_input("Base URL", value=emb.get("base_url", default_url), key=f"emb_url{emb_key_suffix}")
+        else:
+            base_url = emb.get("base_url", "")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💾 保存 Embedding配置", type="primary", key=f"save_emb{emb_key_suffix}"):
+            emb_data = {
+                "id": emb_id,
+                "provider": provider,
+                "model_name": model_name,
+                "display_name": display_name,
+                "dimensions": dimensions,
+                "api_key": api_key,
+            }
+            if base_url:
+                emb_data["base_url"] = base_url
+            
+            if "embeddings" not in config:
+                config["embeddings"] = []
+            
+            if edit_emb_idx is not None:
+                config["embeddings"][edit_emb_idx] = emb_data
+            else:
+                config["embeddings"].append(emb_data)
+            
+            save_config(config)
+            st.success("保存成功！")
+            if "edit_emb_index" in st.session_state:
+                del st.session_state.edit_emb_index
+            st.rerun()
+    
+    with col2:
+        if edit_emb_idx is not None:
+            cancel_emb_btn_key = f"emb_cancel_edit_{edit_emb_idx}"
+            if st.button("❌ 取消编辑", key=cancel_emb_btn_key):
+                del st.session_state.edit_emb_index
+                st.rerun()
+
+with tab4:
+    config = load_config()
+    
     st.subheader("IM平台全局配置")
     
     platforms = ["feishu", "web"]
@@ -522,7 +675,7 @@ with tab3:
                 save_config(config)
                 st.success("保存成功！")
 
-with tab4:
+with tab5:
     config = load_config()
     
     st.subheader("工作流配置")
@@ -571,7 +724,7 @@ with tab4:
         save_config(config)
         st.success("保存成功！")
 
-with tab5:
+with tab6:
     st.subheader("服务管理")
     
     col1, col2 = st.columns(2)
