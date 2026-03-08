@@ -336,7 +336,11 @@ class SimpleFeishuChannel:
             pass
 
     def _on_message_sync(self, data: "P2ImMessageReceiveV1") -> None:
+        logger.info(f"[DEBUG] _on_message_sync 被调用, data type: {type(data)}")
+        if data:
+            logger.info(f"[DEBUG] data.event: {getattr(data, 'event', None)}")
         if not self._loop or not self._loop.is_running():
+            logger.warning("[DEBUG] loop未运行, 跳过消息处理")
             return
         asyncio.run_coroutine_threadsafe(self._on_message(data), self._loop)
 
