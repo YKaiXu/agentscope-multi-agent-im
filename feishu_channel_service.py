@@ -752,6 +752,7 @@ class FeishuChannelService:
                 if agent_config.embedding_model:
                     try:
                         from agentscope.memory import Mem0LongTermMemory
+                        import mem0.vector_stores.configs as vector_configs
                         
                         emb_config = self.get_embedding_config(agent_config.embedding_model)
                         if emb_config:
@@ -761,13 +762,13 @@ class FeishuChannelService:
                                 data_dir = Path(__file__).parent / "data" / "qdrant"
                                 data_dir.mkdir(parents=True, exist_ok=True)
                                 
-                                vector_store_config = {
-                                    "provider": "qdrant",
-                                    "config": {
+                                vector_store_config = vector_configs.VectorStoreConfig(
+                                    provider="qdrant",
+                                    config={
                                         "collection_name": f"ltm_{agent_config.name}",
                                         "path": str(data_dir),
                                     }
-                                }
+                                )
                                 
                                 long_term_memory = Mem0LongTermMemory(
                                     agent_name=agent_config.name,
