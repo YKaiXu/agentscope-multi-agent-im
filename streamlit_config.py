@@ -569,7 +569,7 @@ with tab3:
         elif provider == "XFMaas":
             default_model = "xop3qwen8bembedding"
             default_dim = 1024
-            default_url = "https://maas-api.cn-huabei-1.xf-yun.com/v2/embeddings"
+            default_url = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
         else:
             default_model = "nomic-embed-text"
             default_dim = 768
