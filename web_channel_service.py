@@ -11,6 +11,8 @@ import json
 import logging
 import os
 import sys
+import uuid
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
@@ -27,6 +29,59 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+
+class XFMaasEmbedding:
+    """XFMaas Embedding模型，处理讯飞Maas平台的Embedding API响应"""
+    
+    def __init__(
+        self,
+        model_name: str,
+        api_key: str,
+        base_url: str,
+        dimensions: int = 1024,
+    ):
+        self.model_name = model_name
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+        self.dimensions = dimensions
+    
+    def __call__(self, text: str) -> List[float]:
+        return self.embed(text)
+    
+    def embed(self, text: str) -> List[float]:
+        import requests
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        
+        data = {
+            "model": self.model_name,
+            "input": text,
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.base_url}",
+                headers=headers,
+                json=data,
+                timeout=60,
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if "data" in result and len(result["data"]) > 0:
+                embedding_data = result["data"][0]
+                if "embedding" in embedding_data:
+                    return embedding_data["embedding"]
+            
+            raise ValueError(f"Invalid XFMaas response format: {result}")
+            
+        except Exception as e:
+            logger.error(f"XFMaas Embedding API call failed: {e}")
+            raise RuntimeError(f"XFMaas Embedding API call failed: {e}")
 
 PROJECT_DIR = Path(__file__).parent
 CONFIG_FILE = PROJECT_DIR / "config.json"
@@ -153,6 +208,13 @@ def create_embedding_model(emb_config: Dict[str, Any]) -> Any:
                 model_name=emb_config.get("model_name", ""),
                 api_key=emb_config.get("api_key", ""),
                 base_url=emb_config.get("base_url", ""),
+            )
+        elif provider == "XFMaas":
+            return XFMaasEmbedding(
+                model_name=emb_config.get("model_name", ""),
+                api_key=emb_config.get("api_key", ""),
+                base_url=emb_config.get("base_url", ""),
+                dimensions=emb_config.get("dimensions", 1024),
             )
         else:
             logger.error(f"不支持的Embedding提供商: {provider}")

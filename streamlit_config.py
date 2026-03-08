@@ -545,8 +545,8 @@ with tab3:
         
         provider = st.selectbox(
             "提供商",
-            ["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"],
-            index=["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"].index(emb.get("provider", "DashScope")) if emb.get("provider", "DashScope") in ["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"] else 0,
+            ["OpenAI", "DashScope", "Gemini", "Ollama", "XFMaas", "自定义"],
+            index=["OpenAI", "DashScope", "Gemini", "Ollama", "XFMaas", "自定义"].index(emb.get("provider", "DashScope")) if emb.get("provider", "DashScope") in ["OpenAI", "DashScope", "Gemini", "Ollama", "XFMaas", "自定义"] else 0,
             key=f"emb_provider{emb_key_suffix}"
         )
         
@@ -566,6 +566,10 @@ with tab3:
             default_model = "text-embedding-004"
             default_dim = 768
             default_url = ""
+        elif provider == "XFMaas":
+            default_model = "xop3qwen8bembedding"
+            default_dim = 1024
+            default_url = "https://maas-api.cn-huabei-1.xf-yun.com/v2/embeddings"
         else:
             default_model = "nomic-embed-text"
             default_dim = 768

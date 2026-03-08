@@ -120,7 +120,7 @@
   "embeddings": [
     {
       "id": "XF-Qwen38bEmbedding",
-      "provider": "自定义",
+      "provider": "XFMaas",
       "model_name": "xop3qwen8bembedding",
       "display_name": "XF-Qwen3Embedding",
       "dimensions": 1024,
