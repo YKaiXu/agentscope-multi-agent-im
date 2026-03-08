@@ -703,8 +703,8 @@ class FeishuChannelService:
             elif provider == "XFMaas":
                 from agentscope.embedding import OpenAITextEmbedding
                 return OpenAITextEmbedding(
-                    model_name=emb_config.get("model_name", ""),
                     api_key=emb_config.get("api_key", ""),
+                    model_name=emb_config.get("model_name", ""),
                     dimensions=emb_config.get("dimensions", 1024),
                     base_url=emb_config.get("base_url", ""),
                 )
