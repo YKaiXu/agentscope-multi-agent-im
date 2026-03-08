@@ -523,9 +523,15 @@ class SimpleFeishuChannel:
             .build()
         )
 
+        def _noop_handler(data):
+            pass
+
         event_handler = (
             lark.EventDispatcherHandler.builder("", "")
             .register_p2_im_message_receive_v1(self._on_message_sync)
+            .register_p2_im_message_reaction_created_v1(_noop_handler)
+            .register_p2_im_message_message_read_v1(_noop_handler)
+            .register_p2_im_chat_access_event_bot_p2p_chat_entered_v1(_noop_handler)
             .build()
         )
 
