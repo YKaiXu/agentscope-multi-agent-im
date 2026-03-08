@@ -170,12 +170,14 @@ with tab1:
     with col1:
         name = st.text_input("名称", value=agent.get("name", ""), key=f"agent_name{key_suffix}")
         role = st.text_input("角色", value=agent.get("role", ""), key=f"agent_role{key_suffix}")
-        current_model_idx = llm_options.index(agent.get("model", "")) if agent.get("model") in llm_options else 0
+        
+        model_options = [""] + llm_options
+        current_model_idx = model_options.index(agent.get("model", "")) if agent.get("model", "") in model_options else 0
         model = st.selectbox(
             "模型", 
-            llm_options, 
+            model_options, 
             index=current_model_idx, 
-            format_func=lambda x: llm_display_map.get(x, x),
+            format_func=lambda x: "⚠️ 未选择" if x == "" else llm_display_map.get(x, x),
             key=f"agent_model{key_suffix}"
         )
     with col2:
@@ -328,34 +330,37 @@ with tab1:
     with col1:
         save_btn_key = f"agent_save_edit_{edit_idx}" if is_editing else "agent_save_add"
         if st.button("💾 保存", type="primary", key=save_btn_key):
-            knowledge_doc_list = [d.strip() for d in knowledge_docs.split("\n") if d.strip()] if knowledge_docs else []
-            
-            new_agent = {
-                "name": name, "role": role, "sys_prompt": sys_prompt, "model": model,
-                "memory_type": memory_type, 
-                "long_term_memory_enabled": ltm_enabled,
-                "long_term_memory_mode": ltm_mode,
-                "ltm_agent_name": ltm_agent_name if ltm_enabled else "",
-                "embedding_model": embedding_model if ltm_enabled else "",
-                "toolkit_enabled": toolkit_enabled,
-                "enable_meta_tool": meta_tool, "parallel_tool_calls": parallel_tool,
-                "knowledge_enabled": knowledge_enabled, 
-                "enable_rewrite_query": rewrite_query,
-                "knowledge_documents": knowledge_doc_list,
-                "plan_notebook_enabled": notebook_enabled, 
-                "max_iters": max_iters,
-                "print_hint_msg": print_hint, "formatter": formatter,
-                "im_platform": im_platform, "im_app_id": im_app_id, "im_app_secret": im_app_secret,
-                "enabled": enabled
-            }
-            if edit_idx is not None:
-                config["agents"][edit_idx] = new_agent
-                del st.session_state.edit_index
+            if not model:
+                st.error("❌ 请选择模型！")
             else:
-                config["agents"].append(new_agent)
-            save_config(config)
-            st.success("保存成功！")
-            st.rerun()
+                knowledge_doc_list = [d.strip() for d in knowledge_docs.split("\n") if d.strip()] if knowledge_docs else []
+                
+                new_agent = {
+                    "name": name, "role": role, "sys_prompt": sys_prompt, "model": model,
+                    "memory_type": memory_type, 
+                    "long_term_memory_enabled": ltm_enabled,
+                    "long_term_memory_mode": ltm_mode,
+                    "ltm_agent_name": ltm_agent_name if ltm_enabled else "",
+                    "embedding_model": embedding_model if ltm_enabled else "",
+                    "toolkit_enabled": toolkit_enabled,
+                    "enable_meta_tool": meta_tool, "parallel_tool_calls": parallel_tool,
+                    "knowledge_enabled": knowledge_enabled, 
+                    "enable_rewrite_query": rewrite_query,
+                    "knowledge_documents": knowledge_doc_list,
+                    "plan_notebook_enabled": notebook_enabled, 
+                    "max_iters": max_iters,
+                    "print_hint_msg": print_hint, "formatter": formatter,
+                    "im_platform": im_platform, "im_app_id": im_app_id, "im_app_secret": im_app_secret,
+                    "enabled": enabled
+                }
+                if edit_idx is not None:
+                    config["agents"][edit_idx] = new_agent
+                    del st.session_state.edit_index
+                else:
+                    config["agents"].append(new_agent)
+                save_config(config)
+                st.success("保存成功！")
+                st.rerun()
     with col2:
         if edit_idx is not None:
             cancel_btn_key = f"agent_cancel_edit_{edit_idx}"

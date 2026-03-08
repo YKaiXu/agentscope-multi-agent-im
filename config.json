@@ -105,5 +105,17 @@
       "api_key": "ec0ed7465c4146218af65d58d810b37f.xQDmGgInzSmCLNsB"
     }
   ],
-  "workflow": "parallel"
+  "workflow": "parallel",
+  "embeddings": [
+    {
+      "id": "emb_siliyoudao",
+      "provider": "自定义",
+      "model_name": "netease-youdao/bce-embedding-base_v1",
+      "display_name": "DashScope Embedding",
+      "dimensions": 1024,
+      "api_key": "sk-jrqbeunjyuglerrblwoqfernorvucxbfrdkmyszajkilaasr",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "custom_provider": "SILI"
+    }
+  ]
 }
