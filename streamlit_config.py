@@ -171,15 +171,22 @@ with tab1:
         name = st.text_input("名称", value=agent.get("name", ""), key=f"agent_name{key_suffix}")
         role = st.text_input("角色", value=agent.get("role", ""), key=f"agent_role{key_suffix}")
         
-        model_options = [""] + llm_options
-        current_model_idx = model_options.index(agent.get("model", "")) if agent.get("model", "") in model_options else 0
-        model = st.selectbox(
-            "模型", 
-            model_options, 
-            index=current_model_idx, 
-            format_func=lambda x: "⚠️ 未选择" if x == "" else llm_display_map.get(x, x),
-            key=f"agent_model{key_suffix}"
-        )
+        if len(llm_options) == 1:
+            model = llm_options[0]
+            st.info(f"✅ 自动选择唯一模型: {llm_display_map.get(model, model)}")
+        else:
+            model_options = [""] + llm_options
+            current_model = agent.get("model", "")
+            if not current_model and llm_options:
+                current_model = llm_options[0]
+            current_model_idx = model_options.index(current_model) if current_model in model_options else 0
+            model = st.selectbox(
+                "模型", 
+                model_options, 
+                index=current_model_idx, 
+                format_func=lambda x: "⚠️ 未选择" if x == "" else llm_display_map.get(x, x),
+                key=f"agent_model{key_suffix}"
+            )
     with col2:
         im_platform = st.selectbox("IM平台", ["global", "feishu", "web"], 
                                    index=["global", "feishu", "web"].index(agent.get("im_platform", "global")), key=f"agent_im{key_suffix}")

@@ -169,13 +169,23 @@ async def create_agent(agent_config: AgentConfig, config: Dict[str, Any]) -> Any
         from agentscope.memory import InMemoryMemory
         from agentscope.formatter import OpenAIChatFormatter
 
-        api_config = get_api_config(agent_config.model, config)
+        model_id = agent_config.model
+        if not model_id:
+            llms = config.get("llms", [])
+            if llms:
+                model_id = llms[0].get("id", "")
+                logger.info(f"Agent {agent_config.name} 未指定模型，自动使用默认模型: {model_id}")
+            else:
+                logger.error(f"Agent {agent_config.name} 未指定模型且无可用LLM配置")
+                return None
+
+        api_config = get_api_config(model_id, config)
         if not api_config.get("api_key"):
             logger.error(f"Agent {agent_config.name} 缺少API配置")
             return None
 
         model = OpenAIChatModel(
-            model_name=api_config.get("model_id", agent_config.model),
+            model_name=api_config.get("model_id", model_id),
             api_key=api_config["api_key"],
             client_kwargs={"base_url": api_config["base_url"]},
         )
