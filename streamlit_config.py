@@ -104,7 +104,11 @@ with tab1:
     st.subheader("Agent列表")
     
     llms_list = config.get("llms", [])
+    embeddings_list = config.get("embeddings", [])
     llm_display_map = {llm["id"]: f"{llm.get('provider', '')} - {llm.get('display_name', llm['id'])}" for llm in llms_list}
+    
+    if not llms_list:
+        st.warning("⚠️ 请先在「LLM配置」页面添加LLM模型")
     
     if config.get("agents"):
         for i, agent in enumerate(config["agents"]):
@@ -155,6 +159,9 @@ with tab1:
         edit_idx = None
     
     llm_options = [llm["id"] for llm in llms_list]
+    
+    if not llm_options:
+        st.error("❌ 请先在「LLM配置」页面添加LLM模型，否则Agent无法正常工作！")
     
     is_editing = edit_idx is not None
     key_suffix = f"_edit_{edit_idx}" if is_editing else "_add"
@@ -507,12 +514,16 @@ with tab3:
         
         provider = st.selectbox(
             "提供商",
-            ["OpenAI", "DashScope", "Gemini", "Ollama"],
-            index=["OpenAI", "DashScope", "Gemini", "Ollama"].index(emb.get("provider", "DashScope")),
+            ["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"],
+            index=["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"].index(emb.get("provider", "DashScope")) if emb.get("provider", "DashScope") in ["OpenAI", "DashScope", "Gemini", "Ollama", "自定义"] else 0,
             key=f"emb_provider{emb_key_suffix}"
         )
         
-        if provider == "OpenAI":
+        if provider == "自定义":
+            default_model = ""
+            default_dim = 1024
+            default_url = ""
+        elif provider == "OpenAI":
             default_model = "text-embedding-3-small"
             default_dim = 1536
             default_url = "https://api.openai.com/v1"
@@ -536,10 +547,16 @@ with tab3:
         dimensions = st.number_input("向量维度", min_value=128, max_value=4096, value=emb.get("dimensions", default_dim), key=f"emb_dim{emb_key_suffix}")
         api_key = st.text_input("API Key", type="password", value=emb.get("api_key", ""), key=f"emb_key{emb_key_suffix}")
         
-        if provider in ["OpenAI", "Ollama"]:
+        if provider in ["OpenAI", "Ollama", "自定义"]:
             base_url = st.text_input("Base URL", value=emb.get("base_url", default_url), key=f"emb_url{emb_key_suffix}")
         else:
             base_url = emb.get("base_url", "")
+        
+        if provider == "自定义":
+            st.info("💡 自定义Embedding使用OpenAI兼容API格式")
+            custom_provider_name = st.text_input("提供商名称", value=emb.get("custom_provider", ""), key=f"emb_custom{emb_key_suffix}", help="用于标识，可选")
+        else:
+            custom_provider_name = ""
     
     col1, col2 = st.columns(2)
     with col1:
@@ -554,6 +571,8 @@ with tab3:
             }
             if base_url:
                 emb_data["base_url"] = base_url
+            if custom_provider_name:
+                emb_data["custom_provider"] = custom_provider_name
             
             if "embeddings" not in config:
                 config["embeddings"] = []

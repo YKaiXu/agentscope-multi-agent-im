@@ -689,6 +689,13 @@ class FeishuChannelService:
                     model_name=emb_config.get("model_name", "nomic-embed-text"),
                     base_url=emb_config.get("base_url", "http://localhost:11434"),
                 )
+            elif provider == "自定义":
+                from agentscope.embedding import OpenAITextEmbedding
+                return OpenAITextEmbedding(
+                    model_name=emb_config.get("model_name", ""),
+                    api_key=emb_config.get("api_key", ""),
+                    base_url=emb_config.get("base_url", ""),
+                )
             else:
                 logger.error(f"不支持的Embedding提供商: {provider}")
                 return None
