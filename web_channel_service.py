@@ -46,10 +46,9 @@ class XFMaasEmbedding:
         self.base_url = base_url.rstrip("/")
         self.dimensions = dimensions
     
-    def __call__(self, text: str) -> List[float]:
-        return self.embed(text)
-    
-    def embed(self, text: str) -> List[float]:
+    def __call__(self, text: str):
+        """调用XFMaas Embedding API，返回EmbeddingResponse对象"""
+        from agentscope.embedding import EmbeddingResponse
         import requests
         
         headers = {
@@ -75,7 +74,11 @@ class XFMaasEmbedding:
             if "data" in result and len(result["data"]) > 0:
                 embedding_data = result["data"][0]
                 if "embedding" in embedding_data:
-                    return embedding_data["embedding"]
+                    embedding = embedding_data["embedding"]
+                    return EmbeddingResponse(
+                        embeddings=[embedding],
+                        source="api",
+                    )
             
             raise ValueError(f"Invalid XFMaas response format: {result}")
             
