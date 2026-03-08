@@ -607,10 +607,14 @@ with tab4:
             platform_config = config.get("im", {}).get("global_im", {}).get(platform, {})
             
             col1, col2 = st.columns(2)
-            with col1:
-                app_id = st.text_input("App ID", value=platform_config.get("app_id", ""), key=f"im_{platform}_id")
-            with col2:
-                app_secret = st.text_input("App Secret", type="password", value=platform_config.get("app_secret", ""), key=f"im_{platform}_secret")
+            if platform == "feishu":
+                with col1:
+                    app_id = st.text_input("App ID", value=platform_config.get("app_id", ""), key=f"im_{platform}_id")
+                with col2:
+                    app_secret = st.text_input("App Secret", type="password", value=platform_config.get("app_secret", ""), key=f"im_{platform}_secret")
+            else:
+                app_id = ""
+                app_secret = ""
             
             enabled = st.checkbox("启用", value=platform_config.get("enabled", False), key=f"im_{platform}_enabled")
             
