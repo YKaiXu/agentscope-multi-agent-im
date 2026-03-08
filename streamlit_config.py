@@ -438,7 +438,7 @@ with tab2:
         base_url = st.text_input("Base URL", value=llm.get("base_url", "https://open.bigmodel.cn/api/paas/v4/"), key=f"llm_url{llm_key_suffix}")
         api_key = st.text_input("API Key", type="password", value=llm.get("api_key", ""), key=f"llm_key{llm_key_suffix}")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         btn_key = "llm_save_edit" if edit_llm_idx is not None else "llm_save_add"
         if st.button("💾 保存", type="primary", key=btn_key):
@@ -460,6 +460,25 @@ with tab2:
             save_config(config)
             st.rerun()
     with col2:
+        if st.button("🧪 测试连接", key=f"llm_test{llm_key_suffix}"):
+            if not api_key:
+                st.error("❌ 请先输入API Key")
+            else:
+                try:
+                    from agentscope.model import OpenAIChatModel
+                    test_model = OpenAIChatModel(
+                        model_name=model_id,
+                        api_key=api_key,
+                        client_kwargs={"base_url": base_url},
+                    )
+                    response = test_model("你好")
+                    if response:
+                        st.success("✅ 连接正常")
+                    else:
+                        st.error("❌ 连接失败")
+                except Exception as e:
+                    st.error(f"❌ 连接失败: {str(e)}")
+    with col3:
         if edit_llm_idx is not None:
             cancel_llm_btn_key = f"llm_cancel_edit_{edit_llm_idx}"
             if st.button("❌ 取消编辑", key=cancel_llm_btn_key):
@@ -570,7 +589,7 @@ with tab3:
         else:
             custom_provider_name = ""
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("💾 保存 Embedding配置", type="primary", key=f"save_emb{emb_key_suffix}"):
             emb_data = {
@@ -599,8 +618,46 @@ with tab3:
             if "edit_emb_index" in st.session_state:
                 del st.session_state.edit_emb_index
             st.rerun()
-    
     with col2:
+        if st.button("🧪 测试连接", key=f"emb_test{emb_key_suffix}"):
+            if not api_key:
+                st.error("❌ 请先输入API Key")
+            else:
+                try:
+                    if provider == "OpenAI":
+                        from agentscope.embedding import OpenAITextEmbedding
+                        test_emb = OpenAITextEmbedding(
+                            model_name=model_name,
+                            api_key=api_key,
+                            base_url=base_url or "https://api.openai.com/v1",
+                        )
+                    elif provider == "DashScope":
+                        from agentscope.embedding import DashScopeTextEmbedding
+                        test_emb = DashScopeTextEmbedding(
+                            model_name=model_name,
+                            api_key=api_key,
+                            dimensions=dimensions,
+                        )
+                    elif provider == "自定义":
+                        from agentscope.embedding import OpenAITextEmbedding
+                        test_emb = OpenAITextEmbedding(
+                            model_name=model_name,
+                            api_key=api_key,
+                            base_url=base_url,
+                        )
+                    else:
+                        st.warning("⚠️ 该提供商暂不支持测试")
+                        test_emb = None
+                    
+                    if test_emb:
+                        result = test_emb("测试")
+                        if result:
+                            st.success("✅ 连接正常")
+                        else:
+                            st.error("❌ 连接失败")
+                except Exception as e:
+                    st.error(f"❌ 连接失败: {str(e)}")
+    with col3:
         if edit_emb_idx is not None:
             cancel_emb_btn_key = f"emb_cancel_edit_{edit_emb_idx}"
             if st.button("❌ 取消编辑", key=cancel_emb_btn_key):

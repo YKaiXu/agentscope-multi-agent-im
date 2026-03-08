@@ -108,14 +108,14 @@
   "workflow": "parallel",
   "embeddings": [
     {
-      "id": "emb_siliyoudao",
+      "id": "XF-Qwen38bEmbedding",
       "provider": "自定义",
-      "model_name": "netease-youdao/bce-embedding-base_v1",
-      "display_name": "DashScope Embedding",
+      "model_name": "xop3qwen8bembedding",
+      "display_name": "XF-Qwen3Embedding",
       "dimensions": 1024,
-      "api_key": "sk-jrqbeunjyuglerrblwoqfernorvucxbfrdkmyszajkilaasr",
-      "base_url": "https://api.siliconflow.cn/v1",
-      "custom_provider": "SILI"
+      "api_key": "3ea8786db03a2d548225ed0f8a31564e:ZWI5YTRhNzlkYzc5YzIzODQ3NTA4MGI0",
+      "base_url": "https://maas-api.cn-huabei-1.xf-yun.com/v2/embeddings",
+      "custom_provider": "XFMaas"
     }
   ]
 }
